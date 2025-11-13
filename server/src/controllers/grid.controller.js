@@ -2,7 +2,6 @@ const GridService = require('../services/grid.service');
 
 // Controller for grid operations
 class GridController {
-
   // Get the current state of the grid  
   async getGrid(req, res) {
     try {
@@ -17,20 +16,37 @@ class GridController {
   async placePixel(req, res) {
     try {
       const { x, y, color } = req.body;
-      const userId = req.user?.id; 
 
-      if (!userId) {
-        return res.status(401).json({ message: 'Authentication required' });
+      // Check authenticated user
+      const user = req.user;
+
+      if (!user || !user.id) {
+        return res.status(401).json({ message: 'User not authenticated' });
       }
+
+      const userId = user.id;
 
       if (x === undefined || y === undefined || color === undefined) {
         return res.status(400).json({ message: 'x, y, and color are required' });
       }
 
       const placedPixel = await GridService.placePixel(x, y, color, userId);
-      res.status(201).json(placedPixel);
+
+      const io = req.app.get('io');
+
+      if (io) {
+        io.emit('pixel_updated', {
+          x_coord: placedPixel.x_coord,
+          y_coord: placedPixel.y_coord,
+          color: placedPixel.color,
+          user_id: placedPixel.user_id,
+        });
+      }
+
+      return res.status(201).json(placedPixel);
     } catch (error) {
-      res.status(500).json({ message: error.message });
+      console.error('Error in placePixel controller:', error);
+      return res.status(500).json({ message: error.message });
     }
   }
 }

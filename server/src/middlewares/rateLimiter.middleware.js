@@ -1,11 +1,13 @@
 const rateLimit = require('express-rate-limit');
 
-// Configuration ratelimiter for pixel placement
+const PIXEL_COOLDOWN_MINUTES = 1;
+
+// Rate limiter middleware for pixel placement
 const pixelRateLimiter = rateLimit({
-  windowMs: 30 * 1000, 
-  max: 1, 
+  windowMs: PIXEL_COOLDOWN_MINUTES * 60 * 1000,
+  max: 1,
   message: {
-    message: 'Too many pixels placed recently, please try again later.',
+    message: `Vous ne pouvez placer qu'un pixel toutes les ${PIXEL_COOLDOWN_MINUTES} minute(s).`,
   },
   standardHeaders: true,
   legacyHeaders: false,
