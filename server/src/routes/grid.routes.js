@@ -2,13 +2,7 @@ const express = require('express');
 const router = express.Router();
 const GridController = require('../controllers/grid.controller');
 const { pixelRateLimiter } = require('../middlewares/rateLimiter.middleware');
-
-// Placeholder JWT check middleware
-const placeholderCheckJwt = (req, res, next) => {
-  console.log('Placeholder JWT check: Simulating user attachment');
-  req.user = { id: 1, role: 'user' }; 
-  next();
-};
+const checkJwt = require('../middlewares/checkJwt');
 
 // Route to get the current state of the grid
 router.get('/', GridController.getGrid);
@@ -16,7 +10,7 @@ router.get('/', GridController.getGrid);
 // Route to place a pixel on the grid
 router.post(
   '/pixel',
-  placeholderCheckJwt, 
+  checkJwt,
   pixelRateLimiter,
   GridController.placePixel
 );
