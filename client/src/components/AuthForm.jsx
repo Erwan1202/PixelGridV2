@@ -20,7 +20,7 @@ export const AuthForm = () => {
         await login(email, password);
       } else {
         await register(username, email, password);
-        setIsLogin(true); // Redirige vers le login après l'inscription
+        setIsLogin(true); // Switch to login after registration
       }
     } catch (err) {
       setError(err.response?.data?.message || 'An error occurred');
