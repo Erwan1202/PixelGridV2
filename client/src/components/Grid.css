@@ -1,26 +1,58 @@
-.grid-container {
+:root {
+  --grid-size: 50;
+  --cell-size: 15px;
+}
+
+body {
+  background-color: #242424;
+  color: white;
+  font-family: system-ui, sans-serif;
+  display: flex;
+  justify-content: center;
+  margin-top: 2rem;
+}
+
+.App {
+  text-align: center;
+}
+
+.pixel-grid-container {
   display: grid;
-  grid-template-columns: repeat(50, 10px); 
-  grid-template-rows: repeat(50, 10px); 
+  grid-template-columns: repeat(var(--grid-size), var(--cell-size));
+  grid-template-rows: repeat(var(--grid-size), var(--cell-size));
+  width: calc(var(--grid-size) * var(--cell-size));
+  height: calc(var(--grid-size) * var(--cell-size));
   border: 1px solid #555;
-  width: 500px; 
-  height: 500px; 
-  margin: 20px auto;
-  background-color: #fff; 
+  background-color: #f0f0f0; 
+  margin-top: 1rem;
+  position: relative; 
 }
 
-.pixel {
-  width: 10px;
-  height: 10px;
-  border: 1px solid #eee; 
-  box-sizing: border-box;
+.grid-cell {
+  grid-column-start: var(--x);
+  grid-row-start: var(--y);
 }
-
-.pixel:hover {
-  border: 1px solid #000;
+ 
+.grid-cell:hover {
+  outline: 1px solid rgba(0, 0, 255, 0.5);
   cursor: pointer;
 }
 
+.pixel {
+  position: absolute;
+  left: calc((var(--x) - 1) * var(--cell-size));
+  top: calc((var(--y) - 1) * var(--cell-size));
+  width: var(--cell-size);
+  height: var(--cell-size);
+  background-color: var(--color);
+  outline: 1px solid rgba(0, 0, 0, 0.1);
+  pointer-events: none; 
+}
+
 .color-picker {
-  margin-top: 10px;
+  margin-top: 1rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
 }

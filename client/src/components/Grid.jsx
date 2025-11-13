@@ -1,96 +1,117 @@
 import React, { useState, useEffect } from 'react';
-import { socket } from '../services/socket';
 import api from '../../services/api';
+import { socket } from '../services/socket';
 import './Grid.css';
 
 const GRID_SIZE = 50;
 
-// Grid component to display and interact with the pixel grid
+// Grid component
 const Grid = () => {
-  const [grid, setGrid] = useState(
-    Array(GRID_SIZE * GRID_SIZE).fill('#FFFFFF')
-  );
-  const [selectedColor, setSelectedColor] = useState('#000000');
+  const [pixels, setPixels] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [currentColor, setCurrentColor] = useState('#FF0000');
   const [error, setError] = useState(null);
 
-  const updatePixelState = (pixel) => {
-    setGrid((prevGrid) => {
-      const newGrid = [...prevGrid];
-      const index = pixel.y_coord * GRID_SIZE + pixel.x_coord;
-      if (index >= 0 && index < newGrid.length) {
-        newGrid[index] = pixel.color;
-      }
-      return newGrid;
-    });
+  // Fetch the grid pixels from the server
+  const fetchGrid = async () => {
+    try {
+      const response = await api.get('/grid');
+      const validPixels = response.data.filter(p => 
+        p.x_coord >= 1 && p.x_coord <= GRID_SIZE &&
+        p.y_coord >= 1 && p.y_coord <= GRID_SIZE
+      );
+      setPixels(validPixels);
+    } catch (error) {
+      console.error("Erreur fetchGrid:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Fetch initial grid and set up socket listeners
+  // Setup Socket.IO listeners
   useEffect(() => {
-    const fetchGrid = async () => {
-      try {
-        const response = await api.get('/grid');
-        const initialGrid = Array(GRID_SIZE * GRID_SIZE).fill('#FFFFFF');
-        response.data.forEach((pixel) => {
-          const index = pixel.y_coord * GRID_SIZE + pixel.x_coord;
-          initialGrid[index] = pixel.color;
-        });
-        setGrid(initialGrid);
-      } catch (err) {
-        console.error('Failed to fetch grid', err);
-      }
-    };
-
     fetchGrid();
-
-    // Set up Socket.IO connection and listeners
     socket.connect();
-    socket.on('pixel_updated', (pixel) => {
-      updatePixelState(pixel);
+
+    socket.on('pixel_updated', (newPixel) => {
+      setPixels(prevPixels => [
+        ...prevPixels.filter(p => !(p.x_coord === newPixel.x_coord && p.y_coord === newPixel.y_coord)),
+        { x_coord: newPixel.x_coord, y_coord: newPixel.y_coord, color: newPixel.color }
+      ]);
     });
 
     return () => {
       socket.off('pixel_updated');
       socket.disconnect();
     };
-  }, []);
+  }, []); 
 
-  // Handle pixel click to place a pixel
-  const handlePixelClick = async (index) => {
+  const handlePlacePixel = async (x, y) => {
+    const pixelData = { x, y, color: currentColor };
     setError(null);
-    const x = index % GRID_SIZE;
-    const y = Math.floor(index / GRID_SIZE);
 
     // Send request to place pixel
     try {
-      await api.post('/grid/pixel', { x, y, color: selectedColor });
-    } catch (err) {
-      if (err.response && err.response.status === 429) {
-        setError('Rate limit: Please wait before placing another pixel.');
+      await api.post('/grid/pixel', pixelData);
+    } catch (error) {
+      if (error.response && error.response.status === 429) {
+        setError(error.response.data.message); 
       } else {
-        setError('Failed to place pixel.');
+        console.error("Erreur placePixel:", error);
+        setError("Erreur lors du placement du pixel.");
       }
     }
   };
 
+  // Render grid cells
+  const renderGridCells = () => {
+    const cells = [];
+    for (let y = 1; y <= GRID_SIZE; y++) {
+      for (let x = 1; x <= GRID_SIZE; x++) {
+        cells.push(
+          <div 
+            key={`${x}-${y}`}
+            className="grid-cell"
+            style={{ '--x': x, '--y': y }}
+            onClick={() => handlePlacePixel(x, y)} 
+          ></div>
+        );
+      }
+    }
+    return cells;
+  };
+
+  if (loading) {
+    return <div>Chargement de la grille...</div>;
+  }
+
   return (
-    <div>
-      <div className="grid-container">
-        {grid.map((color, index) => (
-          <div
+    <div className="App">
+      <div className="color-picker">
+        <label>Couleur :</label>
+        <input 
+          type="color" 
+          value={currentColor}
+          onChange={(e) => setCurrentColor(e.target.value)}
+        />
+      </div>
+      {error && <p style={{ color: 'red' }}>{error}</p>}
+      
+      <div className="pixel-grid-container">
+        {renderGridCells()}
+        {pixels.map((pixel, index) => (
+          <div 
             key={index}
             className="pixel"
-            style={{ backgroundColor: color }}
-            onClick={() => handlePixelClick(index)}
-          />
+            style={{
+              '--x': pixel.x_coord,
+              '--y': pixel.y_coord,
+              '--color': pixel.color
+            }}
+          >
+          </div>
         ))}
       </div>
-      <input
-        type="color"
-        value={selectedColor}
-        onChange={(e) => setSelectedColor(e.target.value)}
-        className="color-picker"
-      />
-      {error && <p style={{ color: 'red' }}>{error}</p>}
     </div>
   );
 };
