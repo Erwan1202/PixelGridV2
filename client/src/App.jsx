@@ -1,3 +1,4 @@
+import React from 'react';
 import './App.css';
 import { useAuth } from '../context/AuthContext.jsx';
 import { AuthForm } from './components/AuthForm';
