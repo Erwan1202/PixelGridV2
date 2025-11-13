@@ -1,6 +1,6 @@
 const rateLimit = require('express-rate-limit');
 
-const PIXEL_COOLDOWN_MINUTES = 1;
+const PIXEL_COOLDOWN_MINUTES = 1/2;
 
 // Rate limiter middleware for pixel placement
 const pixelRateLimiter = rateLimit({

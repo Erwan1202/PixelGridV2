@@ -23,10 +23,13 @@ const app = express();
 const server = http.createServer(app); 
 
 // Initialize Socket.io server
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
 const io = new Server(server, {
   cors: {
-    origin: 'http://localhost:5173', 
+    origin: FRONTEND_URL,
     methods: ['GET', 'POST'],
+    credentials: true,
+    allowedHeaders: ['Authorization', 'Content-Type'],
   },
 });
 
@@ -47,10 +50,14 @@ const startServer = async () => {
   
   // Ensure DB connection
   try {
-    await connectDB();
-    await Pixel.setupTable();
-    await User.setupTable();
-    console.log('Database tables checked/created.');
+    if (process.env.SKIP_DB === 'true') {
+      console.log('SKIP_DB is true: skipping database connection and table setup (dev mode).');
+    } else {
+      await connectDB();
+      await Pixel.setupTable();
+      await User.setupTable();
+      console.log('Database tables checked/created.');
+    }
     
     // Initialize Apollo Server for GraphQL
     const apolloServer = new ApolloServer({
@@ -61,18 +68,16 @@ const startServer = async () => {
 
     // Start Apollo Server
     await apolloServer.start();
-    apolloServer.applyMiddleware({
-      app,
-      path: '/graphql',
-      cors: false,
-    });
 
-    // Apply middlewares
+    // Apply global middlewares BEFORE attaching GraphQL so CORS and body-parsing
+    // apply to the /graphql endpoint as well.
     app.use(corsMiddleware);
+    app.options('*', corsMiddleware);
     app.use(express.json());
     app.use(express.urlencoded({ extended: true }));
 
-    apolloServer.applyMiddleware({ app, path: '/graphql' });
+    // Attach Apollo middleware (CORS disabled here because we handle it above)
+    apolloServer.applyMiddleware({ app, path: '/graphql', cors: false });
 
     // Setup REST API routes
     app.use('/api', apiRoutes);

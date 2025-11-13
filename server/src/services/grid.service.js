@@ -1,44 +1,72 @@
-const Pixel = require('../models/pixel.model');
-const PixelLog = require('../models/pixelLog.model');
+const { pool } = require('../config/db'); 
+const PixelLog = require('../models/pixelLog.model'); 
 
-// Service to handle grid operations
 class GridService {
-  async getGridState() {
+
+  static async getGridState() {
     try {
-      const gridState = await Pixel.getState();
-      return gridState;
+      const result = await pool.query(
+        'SELECT x_coord, y_coord, color FROM pixels'
+      );
+      return result.rows;
     } catch (error) {
-      console.error('Error getting grid state:', error);
-      throw new Error('Failed to retrieve grid state');
+      console.error('[GridService] Error in getGridState:', error);
+      throw error;
     }
   }
 
-  // Place a pixel on the grid
-  async placePixel(x, y, color, userId, io) {
-    if (userId === undefined) {
-      throw new Error('User ID is required to place a pixel');
+  // 
+  static async placePixel(x, y, color, userId) {
+    if (userId == null) {
+      throw new Error('UserId is required to place a pixel');
     }
 
     try {
-      const placedPixel = await Pixel.place(x, y, color, userId);
+      const pixelQuery = `
+        INSERT INTO pixels (x_coord, y_coord, color, user_id)
+        VALUES ($1, $2, $3, $4)
+        ON CONFLICT (x_coord, y_coord)
+        DO UPDATE SET
+          color = EXCLUDED.color,
+          user_id = EXCLUDED.user_id
+        RETURNING x_coord, y_coord, color, user_id;
+      `;
 
-      const logEntry = new PixelLog({
-        x: placedPixel.x_coord,
-        y: placedPixel.y_coord,
-        color: placedPixel.color,
-        user_id: placedPixel.user_id.toString(),
-      });
+      const pixelResult = await pool.query(pixelQuery, [
+        x,
+        y,
+        color,
+        userId,
+      ]);
 
-      logEntry.save();
+      if (pixelResult.rowCount === 0) {
+        throw new Error('Failed to upsert pixel in PostgreSQL');
+      }
 
-      io.emit('pixel_updated', placedPixel);
+      const placedPixel = pixelResult.rows[0];
+
+
+      try {
+        await PixelLog.create({
+          x,
+          y,
+          color,
+          user_id: userId,
+          createdAt: new Date(),
+        });
+      } catch (logError) {
+        console.error(
+          '[GridService] Failed to log pixel in MongoDB:',
+          logError
+        );
+      }
 
       return placedPixel;
     } catch (error) {
-      console.error('Error placing pixel:', error);
-      throw new Error('Failed to place pixel');
+      console.error('[GridService] Error in placePixel:', error);
+      throw error;
     }
   }
 }
 
-module.exports = new GridService();
+module.exports = GridService;
