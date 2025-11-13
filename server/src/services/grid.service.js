@@ -14,12 +14,11 @@ class GridService {
   }
 
   // Place a pixel on the grid
-  async placePixel(x, y, color, userId, io) { // Accepter io
+  async placePixel(x, y, color, userId, io) {
     if (userId === undefined) {
       throw new Error('User ID is required to place a pixel');
     }
-      
-    // Log the pixel placement
+
     try {
       const placedPixel = await Pixel.place(x, y, color, userId);
 
@@ -30,9 +29,8 @@ class GridService {
         user_id: placedPixel.user_id.toString(),
       });
 
-      await logEntry.save();
+      logEntry.save();
 
-      // Emit the pixel update event via Socket.io
       io.emit('pixel_updated', placedPixel);
 
       return placedPixel;
