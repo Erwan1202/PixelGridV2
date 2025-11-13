@@ -3,6 +3,11 @@ const { pool } = require('../config/db');
 // User model for PostgreSQL
 class User {
 
+  // Get database pool
+  static get pool() {
+    return pool;
+  }
+
   // User model for PostgreSQL
   static async setupTable() {
     const query = `
