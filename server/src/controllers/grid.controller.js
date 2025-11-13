@@ -16,6 +16,8 @@ class GridController {
   async placePixel(req, res) {
     try {
       const { x, y, color } = req.body;
+      const userId = req.user?.id;
+      const io = req.app.get('io'); 
 
       // Check authenticated user
       const user = req.user;
@@ -30,20 +32,8 @@ class GridController {
         return res.status(400).json({ message: 'x, y, and color are required' });
       }
 
-      const placedPixel = await GridService.placePixel(x, y, color, userId);
-
-      const io = req.app.get('io');
-
-      if (io) {
-        io.emit('pixel_updated', {
-          x_coord: placedPixel.x_coord,
-          y_coord: placedPixel.y_coord,
-          color: placedPixel.color,
-          user_id: placedPixel.user_id,
-        });
-      }
-
-      return res.status(201).json(placedPixel);
+      const placedPixel = await GridService.placePixel(x, y, color, userId, io);
+      res.status(201).json(placedPixel);
     } catch (error) {
       console.error('Error in placePixel controller:', error);
       return res.status(500).json({ message: error.message });
