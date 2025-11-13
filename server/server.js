@@ -3,7 +3,10 @@ const express = require('express');
 
 const { connectDB } = require('./src/config/db');
 
-const Pixel = require('./src/models/pixel.model'); 
+// Models
+const Pixel = require('./src/models/pixel.model');
+const User = require('./src/models/user.model');
+
 const apiRoutes = require('./src/routes');
 const corsMiddleware = require('./src/middlewares/cors.middleware');
 
@@ -17,7 +20,8 @@ const startServer = async () => {
     // Connect to the database
     await connectDB();
     await Pixel.setupTable(); 
-    console.log('Pixel table checked/created.');
+    await User.setupTable();
+    console.log('Pixel and User tables checked/created.');
 
     // Middlewares
     app.use(corsMiddleware);
