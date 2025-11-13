@@ -44,6 +44,19 @@ class AuthController {
       res.status(401).json({ message: error.message });
     }
   }
+
+  // Return current authenticated user (from checkJwt middleware)
+  async me(req, res) {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: 'Not authenticated' });
+      }
+      // req.user is sanitized in the middleware (password_hash removed)
+      res.status(200).json(req.user);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  }
 }
 
 module.exports = new AuthController();

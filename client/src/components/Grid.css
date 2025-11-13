@@ -1,0 +1,26 @@
+.grid-container {
+  display: grid;
+  grid-template-columns: repeat(50, 10px); 
+  grid-template-rows: repeat(50, 10px); 
+  border: 1px solid #555;
+  width: 500px; 
+  height: 500px; 
+  margin: 20px auto;
+  background-color: #fff; 
+}
+
+.pixel {
+  width: 10px;
+  height: 10px;
+  border: 1px solid #eee; 
+  box-sizing: border-box;
+}
+
+.pixel:hover {
+  border: 1px solid #000;
+  cursor: pointer;
+}
+
+.color-picker {
+  margin-top: 10px;
+}

@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import './App.css';
-import { useAuth } from '../context/AuthContext.jsx';
+import { useAuth } from '../context/AuthContext';
 import { AuthForm } from './components/AuthForm';
+import Grid from './components/Grid'; // Importer Grid
 
-// Main application component
 function App() {
   const { user, loading, logout } = useAuth();
 
@@ -11,15 +11,14 @@ function App() {
     return <div>Loading...</div>;
   }
 
-  // Render the main application
   return (
     <div className="App">
-      <h1>Welcome to jurassic park</h1>
+      <h1>PixelGrid</h1>
       {user ? (
         <div>
           <p>Welcome, {user.username}!</p>
           <button onClick={logout}>Logout</button>
-          {/* Le composant Grid (bientot inshallah) */}
+          <Grid />
         </div>
       ) : (
         <AuthForm />
