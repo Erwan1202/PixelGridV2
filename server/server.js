@@ -7,7 +7,11 @@ const { Server } = require('socket.io');
 const { connectDB } = require('./src/config/db');
 const Pixel = require('./src/models/pixel.model');
 const User = require('./src/models/user.model');
+
+// Routes REST
 const apiRoutes = require('./src/routes');
+
+// Middlewares
 const corsMiddleware = require('./src/middlewares/cors.middleware');
 
 const { ApolloServer } = require('apollo-server-express');
@@ -40,6 +44,8 @@ io.on('connection', (socket) => {
 
 // Start the server
 const startServer = async () => {
+  
+  // Ensure DB connection
   try {
     await connectDB();
     await Pixel.setupTable();
@@ -53,7 +59,13 @@ const startServer = async () => {
       context: ({ req }) => ({ token: req.headers.authorization }),
     });
 
+    // Start Apollo Server
     await apolloServer.start();
+    apolloServer.applyMiddleware({
+      app,
+      path: '/graphql',
+      cors: false,
+    });
 
     // Apply middlewares
     app.use(corsMiddleware);

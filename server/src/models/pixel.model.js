@@ -3,9 +3,12 @@ const { pool } = require('../config/db');
 // Pixel Model for managing pixel data in PostgreSQL
 class Pixel {
   static async getState() {
-    const result = await pool.query('SELECT * FROM pixels');
-    return result.rows;
-  }
+  const result = await pool.query(
+    'SELECT x_coord, y_coord, color FROM pixels'
+  );
+  return result.rows;
+}
+
 
   // Place or update a pixel
   static async place(x, y, color, userId) {

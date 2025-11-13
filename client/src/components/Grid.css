@@ -1,0 +1,58 @@
+:root {
+  --grid-size: 50;
+  --cell-size: 15px;
+}
+
+body {
+  background-color: #242424;
+  color: white;
+  font-family: system-ui, sans-serif;
+  display: flex;
+  justify-content: center;
+  margin-top: 2rem;
+}
+
+.App {
+  text-align: center;
+}
+
+.pixel-grid-container {
+  display: grid;
+  grid-template-columns: repeat(var(--grid-size), var(--cell-size));
+  grid-template-rows: repeat(var(--grid-size), var(--cell-size));
+  width: calc(var(--grid-size) * var(--cell-size));
+  height: calc(var(--grid-size) * var(--cell-size));
+  border: 1px solid #555;
+  background-color: #f0f0f0; 
+  margin-top: 1rem;
+  position: relative; 
+}
+
+.grid-cell {
+  grid-column-start: var(--x);
+  grid-row-start: var(--y);
+}
+ 
+.grid-cell:hover {
+  outline: 1px solid rgba(0, 0, 255, 0.5);
+  cursor: pointer;
+}
+
+.pixel {
+  position: absolute;
+  left: calc((var(--x) - 1) * var(--cell-size));
+  top: calc((var(--y) - 1) * var(--cell-size));
+  width: var(--cell-size);
+  height: var(--cell-size);
+  background-color: var(--color);
+  outline: 1px solid rgba(0, 0, 0, 0.1);
+  pointer-events: none; 
+}
+
+.color-picker {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+}
