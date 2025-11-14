@@ -1,7 +1,6 @@
 import axios from 'axios';
 
-const PROD_ORIGIN =
-  import.meta.env.VITE_API_BASE_URL || 'https://pixelgridv2.onrender.com';
+const PROD_ORIGIN = import.meta.env.VITE_API_BASE_URL || '';
 const API_BASE_URL =
   import.meta.env.MODE === 'development'
     ? 'http://localhost:3001/api'
@@ -29,14 +28,14 @@ api.interceptors.response.use(
   async (error) => {
 
     // Si 401, tente de rafraîchir le token
-    const originalRequest = error?.config || {};
-    if (error?.response?.status === 401 && !originalRequest._retry) {
+    const originalRequest = error.config;
+    if (error.response.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       try {
         // Tente de rafraîchir le token
         const refreshToken = localStorage.getItem('refreshToken');
         if (!refreshToken) {
-          window.location.href = '/';
+          window.location.href = '/login';
           return Promise.reject(error);
         }
         // Appel pour rafraîchir le token
@@ -46,7 +45,7 @@ api.interceptors.response.use(
         api.defaults.headers.common['Authorization'] = 'Bearer ' + accessToken;
         return api(originalRequest);
       } catch (_error) {
-        window.location.href = '/';
+        window.location.href = '/login';
         return Promise.reject(_error);
       }
     }

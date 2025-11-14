@@ -24,17 +24,11 @@ const app = express();
 const server = http.createServer(app); 
 
 // Initialize Socket.io server
-const FRONTEND_URL = process.env.FRONTEND_URL; // e.g. https://your-vercel-domain.vercel.app
+const FRONTEND_URL = process.env.FRONTEND_URL; //|| 'http://localhost:5173';
 const io = new Server(server, {
-  path: "/socket.io",
+  path: "/socket.io", 
   cors: {
-    // Allow explicit FRONTEND_URL when set, otherwise reflect any origin (dev/prod flexibility)
-    origin: (origin, callback) => {
-      if (!origin) return callback(null, true);
-      if (!FRONTEND_URL) return callback(null, true);
-      if (origin === FRONTEND_URL) return callback(null, true);
-      return callback(null, false);
-    },
+    origin: FRONTEND_URL,
     methods: ['GET', 'POST'],
     credentials: true,
     allowedHeaders: ['Authorization', 'Content-Type'],
