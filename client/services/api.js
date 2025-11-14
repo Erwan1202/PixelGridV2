@@ -1,14 +1,15 @@
 import axios from 'axios';
 
-// Use Vite environment variable when available (fallback for local dev)
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const API_BASE_URL =
+  import.meta.env.MODE === 'development'
+    ? 'http://localhost:3001/api'
+    : import.meta.env.VITE_API_BASE_URL;
 
 const api = axios.create({
-  baseURL: `${API_BASE_URL}/api`,
+  baseURL: API_BASE_URL,
   withCredentials: true,
 });
 
-// Add a request interceptor to include the token in headers
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('accessToken');
@@ -17,9 +18,7 @@ api.interceptors.request.use(
     }
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
 export default api;
