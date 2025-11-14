@@ -5,6 +5,14 @@ const User = require('../models/user.model');
 const JWT_ACCESS_SECRET = process.env.JWT_ACCESS_SECRET;
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET;
 
+// Ensure required JWT secrets are present at startup. If they're missing,
+// fail fast with a clear message rather than letting jwt.sign throw the
+// more cryptic "secretOrPrivateKey must have a value" error later.
+if (!JWT_ACCESS_SECRET || !JWT_REFRESH_SECRET) {
+  console.error('JWT secrets not configured. Please set JWT_ACCESS_SECRET and JWT_REFRESH_SECRET environment variables.');
+  throw new Error('JWT secrets not configured');
+}
+
 // Authentication service
 class AuthService {
 
