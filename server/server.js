@@ -1,7 +1,8 @@
 require('dotenv').config();
 const express = require('express');
 const http = require('http'); 
-const { Server } = require('socket.io'); 
+const { Server } = require('socket.io');
+const helmet = require('helmet');
 
 // Import configurations, models, routes, and middlewares
 const { connectDB } = require('./src/config/db');
@@ -69,6 +70,19 @@ const startServer = async () => {
 
     // Start Apollo Server
     await apolloServer.start();
+
+    // Apply Helmet for security headers (before other middlewares)
+    app.use(helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          styleSrc: ["'self'", "'unsafe-inline'"],
+          scriptSrc: ["'self'"],
+          imgSrc: ["'self'", "data:", "https:"],
+        },
+      },
+      crossOriginEmbedderPolicy: false, // Allow embedding for GraphQL Playground
+    }));
 
     // Apply global middlewares BEFORE attaching GraphQL so CORS and body-parsing
     // apply to the /graphql endpoint as well.

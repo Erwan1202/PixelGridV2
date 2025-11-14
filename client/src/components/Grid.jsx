@@ -191,10 +191,6 @@ const Grid = () => {
   return (
     <div className="App">
       <div className="toolbar" aria-label="contrôles de placement">
-        <button
-          onClick={() => { socket.disconnect(); }}
-          aria-label="logout"
-        > </button>
         <div className="color-picker">
           <label style={{ fontSize: '.75rem', textTransform: 'uppercase', letterSpacing: '.5px' }}>Couleur</label>
           <input
