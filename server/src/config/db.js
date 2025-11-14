@@ -20,6 +20,7 @@ const pool = new Pool({
 // Connect to both PostgreSQL and MongoDB
 const connectDB = async () => {
   try {
+    // 1. Connexion PostgreSQL
     const client = await pool.connect();
     client.release();
     console.log('PostgreSQL Connected...');
@@ -52,14 +53,24 @@ const connectDB = async () => {
     await pool.query(createPixelTable);
     console.log('Ensured users and pixel tables exist.');
 
+    // 2. Connexion MongoDB (NON BLOQUANTE)
     if (process.env.MONGO_URI) {
-      await mongoose.connect(process.env.MONGO_URI);
-      console.log('MongoDB Connected...');
+      try {
+        await mongoose.connect(process.env.MONGO_URI);
+        console.log('MongoDB Connected...');
+      } catch (mongoErr) {
+        console.error(
+          'MongoDB connection failed (non-blocking):',
+          mongoErr.message
+        );
+        // ⚠️ NE PAS faire process.exit ici → on laisse tourner le serveur
+      }
     } else {
       console.log('MONGO_URI not set, skipping MongoDB connection.');
     }
   } catch (err) {
-    console.error('DB connection error:', err);
+    // Ici on ne gère QUE les erreurs Postgres
+    console.error('DB connection error (Postgres):', err);
     process.exit(1);
   }
 };
