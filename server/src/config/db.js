@@ -56,14 +56,24 @@ const connectDB = async () => {
     // 2. Connexion MongoDB (NON BLOQUANTE)
     if (process.env.MONGO_URI) {
       try {
-        await mongoose.connect(process.env.MONGO_URI);
+        await mongoose.connect(process.env.MONGO_URI, {
+          useNewUrlParser: true,
+          useUnifiedTopology: true,
+        });
         console.log('MongoDB Connected...');
       } catch (mongoErr) {
-        console.error(
-          'MongoDB connection failed (non-blocking):',
-          mongoErr.message
-        );
-        // ⚠️ NE PAS faire process.exit ici → on laisse tourner le serveur
+        const maskMongoUri = (uri) =>
+          uri ? uri.replace(/^(mongodb(?:\+srv)?:\/\/)(?:[^@]+@)?/, '$1') : 'N/A';
+
+        console.error('Connexion MongoDB échouée.');
+        console.error('MONGO_URI (masqué) :', maskMongoUri(process.env.MONGO_URI));
+        console.error('Type d\'erreur :', mongoErr.name);
+        console.error('Message :', mongoErr.message);
+        if (mongoErr.stack) {
+          // Affiche seulement les premières lignes de la stack pour rester lisible
+          console.error('Stack (premières lignes) :', mongoErr.stack.split('\n').slice(0, 6).join('\n'));
+        }
+        console.error('Vérifiez la valeur de MONGO_URI, les identifiants et la connectivité réseau.');
       }
     } else {
       console.log('MONGO_URI not set, skipping MongoDB connection.');

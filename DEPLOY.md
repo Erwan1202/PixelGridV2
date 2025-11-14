@@ -15,9 +15,26 @@ Option A — Déployer le client sur Vercel et le server sur un VPS / Heroku
 - Build command : `npm run build` ; Output directory : `dist`.
 
 2) Server (Render)
-- Heroku : push le dossier `server/` (ou créer un pipeline qui déploie `server/`).
-- Configurer les variables d'environnement (Postgres, MONGO_URI, JWT secrets, FRONTEND_URL, PORT).
-- Si Heroku, ajouter un addon PostgreSQL et renseigner la variable `DATABASE_URL` dans le code si besoin (ici on utilise variables DB_*). Pour Heroku il est souvent plus simple d'utiliser `DATABASE_URL` et d'adapter `server/src/config/db.js`.
+- Create a Render "Web Service" from the `server/` folder (not a static site).
+- Set the following environment variables in the Render service settings:
+	- `FRONTEND_URL` = https://<your-frontend-domain> (example: https://pixel-grid-v2-y3pl.vercel.app)
+	- Database variables (DB_HOST, DB_USER, DB_PASSWORD, DB_NAME) or the appropriate `DATABASE_URL` if you adapt `server/src/config/db.js`.
+	- `MONGO_URI` (optional)
+	- `JWT_SECRET` and any other secrets required by the app
+	- `REDIS_URL` (optional) — if you plan to scale Socket.io across instances
+- Render will provide a `$PORT` env automatically; the server uses `process.env.PORT` so no extra change is required.
+- Make sure the Render service is a web service so it supports persistent WebSocket connections.
+
+Render specifics for Socket.io and Vercel client
+- On the Vercel (client) project, set the environment variable `VITE_SOCKET_URL` to the Render service URL (example: `https://your-render-app.onrender.com`). Use `https://` because Socket.io client will use `wss://` automatically in secure contexts.
+- Ensure the server `FRONTEND_URL` matches your frontend origin exactly (including `https://`) so Socket.io CORS allows the connection.
+- If you add Redis on Render, set `REDIS_URL` to the Redis instance URL and the server will try to enable the Redis adapter automatically (the code has a safe, optional scaffold — install `@socket.io/redis-adapter` and `redis` to enable it).
+
+Troubleshooting on Render
+- Check Render service logs to see the startup output — the server now logs `FRONTEND_URL` and the active Socket.io CORS origin at startup.
+- If the client still tries to connect to the frontend origin (Vercel), verify `VITE_SOCKET_URL` is set in Vercel and that you redeployed the client after setting the env variable.
+- If you see upgrade/connection failures in logs, confirm Render service is a Web Service and not set to a plan or configuration that drops upgrade requests.
+
 
 Option B — Docker + Docker Compose (recommandé pour infra reproductible)
 
