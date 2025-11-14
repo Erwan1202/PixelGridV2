@@ -50,11 +50,11 @@ class AuthController {
   // Refresh access token using refresh token
   async refreshToken(req, res) {
     try {
-      const { token } = req.body;
-      if (!token) {
+      const { refreshToken } = req.body;
+      if (!refreshToken) {
         return res.status(400).json({ message: 'Refresh token is required' });
       }
-      const data = await AuthService.refreshToken(token);
+      const data = await AuthService.refreshToken(refreshToken);
       res.status(200).json(data);
     } catch (error) {
       res.status(401).json({ message: error.message });
