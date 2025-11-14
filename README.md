@@ -2,10 +2,32 @@
 
 Une application fullstack inspirée du concept r/place : un canvas collaboratif où les utilisateurs peuvent placer des pixels en temps réel.
 
-Tech stack
-- Back-end : Node.js, Express, PostgreSQL, MongoDB, JWT, Socket.io
-- Front-end : React + Vite
-- Tests : Jest + Supertest (back)
+## Fonctionnalités
+
+- **Authentification complète** : Inscription, connexion, et déconnexion avec gestion de tokens JWT (Access & Refresh).
+- **Gestion de rôles** : Distinction entre utilisateurs (`user`) et administrateurs (`admin`).
+- **Canvas collaboratif** : Les utilisateurs peuvent placer des pixels sur une grille partagée.
+- **Mise à jour en temps réel** : Les changements sur la grille sont propagés à tous les clients connectés via WebSockets (Socket.io).
+- **Sécurité** : Middlewares pour la protection CORS, limitation de requêtes (rate limiting), et validation des données.
+- **Double base de données** :
+  - **PostgreSQL** pour les données relationnelles (utilisateurs, état de la grille).
+  - **MongoDB** pour l'historique des modifications (logs de pixels).
+- **API double** : Exposition des données via une API RESTful et une API GraphQL.
+
+## Tech Stack
+
+**Back-end**
+- **Framework** : Express.js
+- **Bases de données** : PostgreSQL (avec `pg`), MongoDB (avec `mongoose`)
+- **Authentification** : JSON Web Tokens (JWT)
+- **Temps réel** : Socket.io
+- **API** : REST & GraphQL (Apollo Server)
+- **Tests** : Jest & Supertest
+
+**Front-end**
+- **Framework** : React (avec Vite)
+- **Gestion d'état** : React Context
+- **Communication** : Axios, Socket.io Client
 
 ## Prérequis
 - Node.js (>= 18) et npm
@@ -94,17 +116,34 @@ cd server
 npm test
 ```
 
-## Architecture & organisation
-- `server/` : logiques Express, GraphQL, modèles Mongoose/Postgres, services et contrôleurs
-- `client/` : application React (Vite), composants dans `src/components`
-- Temps réel : communication via Socket.io (client ↔ server)
+## Architecture & Organisation du Code
+
+Le projet est divisé en deux dossiers principaux : `client/` (front-end) et `server/` (back-end).
+
+### `server/`
+
+Le back-end suit une architecture inspirée de **MVC (Modèle-Vue-Contrôleur)**, adaptée pour une API RESTful :
+
+-   `src/routes/` : Définit les endpoints de l'API. Chaque route est associée à une fonction d'un contrôleur.
+-   `src/controllers/` : Reçoit les requêtes, valide les entrées (via les middlewares) et orchestre les opérations en appelant les services appropriés.
+-   `src/services/` : Contient la logique métier (business logic). C'est ici que les calculs et les interactions complexes avec les modèles ont lieu.
+-   `src/models/` : Représente la structure des données. Interagit directement avec les bases de données (PostgreSQL et MongoDB).
+-   `src/middlewares/` : Fonctions qui s'exécutent entre la requête et le contrôleur. Utilisés pour l'authentification (`checkJwt`), la gestion des rôles (`checkRole`), la limitation de requêtes (`rateLimiter`), etc.
+-   `src/config/` : Gère la configuration, comme la connexion aux bases de données.
+-   `src/graphql/` : Contient la définition du schéma, les résolveurs et les types pour l'API GraphQL.
+-   `tests/` : Contient les tests d'intégration et unitaires pour assurer la fiabilité du back-end.
+
+### `client/`
+
+Le front-end est une **Single Page Application (SPA)** construite avec React et Vite.
+
+-   `src/components/` : Composants React réutilisables.
+-   `src/services/` : Fonctions pour communiquer avec l'API back-end (ex: `api.js` pour REST, `socket.js` pour WebSocket).
+-   `context/` : Contient les contextes React (ex: `AuthContext` pour gérer l'état de l'authentification).
 
 ## Contribuer
 - Forker le dépôt et ouvrir une PR. Créez des branches claires (`feat/`, `fix/`, `chore/`).
 - Ajouter des tests pour les nouvelles fonctionnalités côté serveur.
-
-## Licence
-Ajoutez un fichier `LICENSE` si vous souhaitez préciser la licence (ex : MIT).
 
 ## Documentation supplémentaire
 - API détaillée : `API.md`

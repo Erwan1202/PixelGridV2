@@ -9,6 +9,7 @@ let testUser = {
 };
 
 let accessToken;
+let refreshToken;
 
 beforeAll(async () => {
   await connectDB();
@@ -53,6 +54,19 @@ describe('Auth API', () => {
     expect(res.body).toHaveProperty('refreshToken');
 
     accessToken = res.body.accessToken;
+    refreshToken = res.body.refreshToken;
+  });
+
+  test('POST /api/auth/refresh - should get a new access token', async () => {
+    const res = await request(app)
+      .post('/api/auth/refresh')
+      .send({ token: refreshToken });
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toHaveProperty('accessToken');
+    // The new token should be different from the old one
+    expect(res.body.accessToken).not.toBe(accessToken);
+    accessToken = res.body.accessToken; // Update for subsequent tests
   });
 
   test('GET /api/auth/me - should fail without token', async () => {
@@ -67,6 +81,35 @@ describe('Auth API', () => {
       .set('Authorization', `Bearer ${accessToken}`);
 
     expect(res.statusCode).toBe(200);
-    expect(res.body).toHaveProperty('email', testUser.email);
+    expect(res.body).toHaveProperty('user');
+    expect(res.body.user.email).toBe(testUser.email);
+  });
+
+  test('POST /api/auth/logout - should logout the user', async () => {
+    const res = await request(app)
+      .post('/api/auth/logout')
+      .set('Authorization', `Bearer ${accessToken}`);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toHaveProperty('message', 'Successfully logged out');
+  });
+
+  test('POST /api/auth/refresh - should fail after logout', async () => {
+    // This test ensures the refresh token was invalidated
+    const res = await request(app)
+      .post('/api/auth/refresh')
+      .send({ token: refreshToken });
+
+    expect(res.statusCode).toBe(401);
+    expect(res.body).toHaveProperty('message', 'Invalid refresh token');
+  });
+
+  test('Database check - refresh token should be null after logout', async () => {
+    const { rows } = await pool.query(
+      'SELECT refresh_token FROM users WHERE email = $1',
+      [testUser.email]
+    );
+    expect(rows.length).toBe(1);
+    expect(rows[0].refresh_token).toBeNull();
   });
 });

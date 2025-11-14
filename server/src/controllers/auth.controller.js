@@ -32,6 +32,21 @@ class AuthController {
     }
   }
 
+  // User logout
+  async logout(req, res) {
+    try {
+      // We get the user ID from the JWT payload (set by checkJwt middleware)
+      const userId = req.user.id;
+      if (!userId) {
+        return res.status(400).json({ message: 'User not authenticated' });
+      }
+      await AuthService.logout(userId);
+      res.status(200).json({ message: 'Successfully logged out' });
+    } catch (error) {
+      res.status(500).json({ message: 'Failed to logout' });
+    }
+  }
+
   // Refresh access token using refresh token
   async refreshToken(req, res) {
     try {

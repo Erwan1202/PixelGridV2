@@ -43,6 +43,15 @@ class User {
     );
     return result.rows[0];
   }
+
+  // Update refresh token for a user
+  static async updateRefreshToken(id, refreshToken) {
+    const result = await pool.query(
+      'UPDATE users SET refresh_token = $1 WHERE id = $2 RETURNING id',
+      [refreshToken, id]
+    );
+    return result.rows[0];
+  }
 }
 
 module.exports = User;

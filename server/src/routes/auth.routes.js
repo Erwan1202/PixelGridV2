@@ -10,6 +10,7 @@ const { registerSchema, loginSchema, refreshTokenSchema } = require('../validati
 router.post('/register', authRateLimiter, validate(registerSchema), AuthController.register);
 router.post('/login', authRateLimiter, validate(loginSchema), AuthController.login);
 router.post('/refresh', validate(refreshTokenSchema), AuthController.refreshToken);
+router.post('/logout', checkJwt, AuthController.logout);
 // Return current authenticated user
 router.get('/me', checkJwt, AuthController.me);
 

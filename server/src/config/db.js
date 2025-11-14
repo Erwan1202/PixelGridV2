@@ -32,7 +32,8 @@ const connectDB = async () => {
         email VARCHAR(100) NOT NULL UNIQUE,
         password_hash VARCHAR(255) NOT NULL,
         role VARCHAR(20) DEFAULT 'user',
-        created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+        created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+        refresh_token VARCHAR(512)
       );
     `;
 

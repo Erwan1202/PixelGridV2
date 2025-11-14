@@ -62,8 +62,17 @@ class AuthService {
     const accessToken = this.generateAccessToken(user);
     const refreshToken = this.generateRefreshToken(user);
 
+    // Store refresh token in the database
+    await User.updateRefreshToken(user.id, refreshToken);
+
     delete user.password_hash;
     return { accessToken, refreshToken, user };
+  }
+
+  // User logout
+  async logout(userId) {
+    // Invalidate the refresh token in the database
+    await User.updateRefreshToken(userId, null);
   }
 
   // Refresh access token using refresh token
@@ -73,13 +82,17 @@ class AuthService {
       const payload = jwt.verify(token, refresh);
       const user = await User.findById(payload.id);
 
-      if (!user) {
-        throw new Error('User not found');
+      if (!user || user.refresh_token !== token) {
+        throw new Error('Invalid refresh token');
       }
 
       const accessToken = this.generateAccessToken(user);
       return { accessToken };
     } catch (error) {
+      // Distinguish between token expiration and other verification errors
+      if (error.name === 'TokenExpiredError') {
+        throw new Error('Refresh token expired');
+      }
       throw new Error('Invalid refresh token');
     }
   }

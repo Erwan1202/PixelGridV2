@@ -1,68 +1,62 @@
-# Déploiement — PixelGrid V2
+# Déploiement sur Render
 
-Ce guide fournit des options simples pour déployer l'application (server + client). Il ne couvre pas tous les cas, mais donne des étapes éprouvées.
+Ce guide explique comment déployer l'application fullstack (back-end, front-end, et base de données) sur la plateforme [Render](https://render.com/). C'est une solution moderne qui gère automatiquement le SSL, les variables d'environnement et les redéploiements à chaque `git push`.
 
-Pré-requis
-- Avoir une instance PostgreSQL accessible (ex : service managé, conteneur ou instance cloud)
-- (Optionnel) MongoDB si vous utilisez la partie Mongo (logs, analytics)
-- Variables d'environnement correctement définies (voir `server/.env.example`)
+## Prérequis
 
-Option A — Déployer le client sur Vercel et le server sur un VPS / Heroku
+- Un compte [GitHub](https://github.com/) où votre code est hébergé.
+- Un compte [Render](https://dashboard.render.com/) (l'offre gratuite est suffisante pour ce projet).
 
-1) Client (Vercel)
-- Créer un projet Vercel à partir du repo `client/`.
-- Définir les variables d'environnement dans l'interface Vercel (VITE_API_BASE_URL et VITE_SOCKET_URL pointant vers l'API déployée).
-- Build command : `npm run build` ; Output directory : `dist`.
+## Étape 1 : Déployer la base de données PostgreSQL
 
-2) Server (Render)
-- Create a Render "Web Service" from the `server/` folder (not a static site).
-- Set the following environment variables in the Render service settings:
-	- `FRONTEND_URL` = https://<your-frontend-domain> (example: https://pixel-grid-v2-y3pl.vercel.app)
-	- Database variables (DB_HOST, DB_USER, DB_PASSWORD, DB_NAME) or the appropriate `DATABASE_URL` if you adapt `server/src/config/db.js`.
-	- `MONGO_URI` (optional)
-	- `JWT_SECRET` and any other secrets required by the app
-	- `REDIS_URL` (optional) — if you plan to scale Socket.io across instances
-- Render will provide a `$PORT` env automatically; the server uses `process.env.PORT` so no extra change is required.
-- Make sure the Render service is a web service so it supports persistent WebSocket connections.
+1.  Depuis votre tableau de bord Render, cliquez sur **New +** > **PostgreSQL**.
+2.  Donnez un nom à votre base de données (ex: `pixelgrid-db`).
+3.  Choisissez une région proche de vous pour minimiser la latence.
+4.  Cliquez sur **Create Database**.
+5.  Une fois la base de données créée, allez dans l'onglet **Info**. Vous y trouverez les informations de connexion. Gardez précieusement l'**Internal Database URL**. Vous en aurez besoin pour le back-end.
 
-Render specifics for Socket.io and Vercel client
-- On the Vercel (client) project, set the environment variable `VITE_SOCKET_URL` to the Render service URL (example: `https://your-render-app.onrender.com`). Use `https://` because Socket.io client will use `wss://` automatically in secure contexts.
-- Ensure the server `FRONTEND_URL` matches your frontend origin exactly (including `https://`) so Socket.io CORS allows the connection.
-- If you add Redis on Render, set `REDIS_URL` to the Redis instance URL and the server will try to enable the Redis adapter automatically (the code has a safe, optional scaffold — install `@socket.io/redis-adapter` and `redis` to enable it).
+## Étape 2 : Déployer le Back-End (Serveur Node.js)
 
-Troubleshooting on Render
-- Check Render service logs to see the startup output — the server now logs `FRONTEND_URL` and the active Socket.io CORS origin at startup.
-- If the client still tries to connect to the frontend origin (Vercel), verify `VITE_SOCKET_URL` is set in Vercel and that you redeployed the client after setting the env variable.
-- If you see upgrade/connection failures in logs, confirm Render service is a Web Service and not set to a plan or configuration that drops upgrade requests.
+1.  Cliquez sur **New +** > **Web Service**.
+2.  Connectez votre dépôt GitHub et sélectionnez le projet `PixelGridV2`.
+3.  Configurez le service :
+    -   **Name** : `pixelgrid-server` (ou un nom de votre choix).
+    -   **Root Directory** : `server` (très important, pour que Render sache où se trouve le `package.json` du back-end).
+    -   **Build Command** : `npm install`
+    -   **Start Command** : `npm start`
 
+4.  Allez dans l'onglet **Environment** et cliquez sur **Add Environment Group**. Créez un groupe (ex: `pixelgrid-secrets`) pour y stocker vos secrets.
+5.  Ajoutez les variables d'environnement suivantes dans ce groupe :
+    -   **`DB_HOST`**, **`DB_USER`**, **`DB_PASSWORD`**, **`DB_DATABASE`**, **`DB_PORT`** : Render fournit ces variables séparément. Copiez-les depuis la page de votre base de données PostgreSQL.
+    -   **`MONGO_URI`** : L'URI de votre base de données MongoDB Atlas (si vous en utilisez une en production).
+    -   **`JWT_ACCESS_SECRET`** : Générez une chaîne de caractères longue et aléatoire.
+    -   **`JWT_REFRESH_SECRET`** : Générez une autre chaîne de caractères longue et aléatoire.
+    -   **`FRONTEND_URL`** : Laissez cette variable vide pour le moment. Nous la remplirons une fois le front-end déployé.
+    -   **`NODE_ENV`** : `production`
 
-Option B — Docker + Docker Compose (recommandé pour infra reproductible)
+6.  Cliquez sur **Create Web Service**. Render va builder et déployer votre serveur. Une fois terminé, vous obtiendrez une URL pour votre API (ex: `https://pixelgrid-server.onrender.com`).
 
-Exemple d'architecture :
-- service `server` (Node.js)
-- service `client` (serveur statique ou build puis nginx)
-- service `postgres` (image officielle)
-- service `mongo` (si nécessaire)
+## Étape 3 : Déployer le Front-End (Client React)
 
-Points clés
-- Monter les variables d'environnement dans les services (`.env` ou secrets de l'orchestrateur).
-- Exposer le port 3001 pour le serveur et 5173 (ou build static) pour le client.
+1.  Cliquez sur **New +** > **Static Site**.
+2.  Sélectionnez à nouveau votre dépôt `PixelGridV2`.
+3.  Configurez le site statique :
+    -   **Name** : `pixelgrid-client`
+    -   **Root Directory** : `client`
+    -   **Build Command** : `npm run build`
+    -   **Publish Directory** : `dist` (c'est le dossier de build par défaut de Vite).
 
-Option C — Tout déployer sur un VPS (NGINX reverse proxy)
+4.  Allez dans l'onglet **Environment** et ajoutez les variables d'environnement suivantes :
+    -   **`VITE_API_BASE_URL`** : L'URL de votre back-end déployé (ex: `https://pixelgrid-server.onrender.com`).
+    -   **`VITE_SOCKET_URL`** : La même URL que ci-dessus.
 
-- Builder le client (`npm run build`) et servir le dossier `dist` via Nginx.
-- Lancer le serveur Node (PM2 / systemd) et configurer Nginx en reverse-proxy vers `localhost:3001`.
+5.  Cliquez sur **Create Static Site**.
 
-Sécurité & bonnes pratiques
-- Ne commitez jamais les vrais secrets : utilisez les variables d'environnement ou un gestionnaire de secrets.
-- Pour JWT secrets, utilisez des valeurs longues et générées aléatoirement.
-- Protégez l'accès à PostgreSQL (IP whitelisting, utilisateurs dédiés).
-- Activez HTTPS (Let’s Encrypt) pour la production.
+## Étape 4 : Finaliser la configuration
 
-Surveillance & sauvegardes
-- Configurez des backups pour PostgreSQL.
-- Configurez la journalisation et l'alerte d'erreurs (ex. Sentry) pour le serveur.
+1.  Retournez dans la configuration de votre back-end (`pixelgrid-server`).
+2.  Allez dans l'onglet **Environment**.
+3.  Modifiez la variable **`FRONTEND_URL`** et mettez-y l'URL de votre front-end fraîchement déployé (ex: `https://pixelgrid-client.onrender.com`).
+4.  Sauvegardez les changements. Render va redéployer votre serveur avec la bonne configuration CORS pour autoriser les requêtes et les connexions WebSocket depuis votre front-end.
 
-Si tu veux, je peux :
-- générer un `docker-compose.yml` minimal pour lancer server+postgres+mongo en local,
-- ou fournir un `Dockerfile` pour le `server/` et un pour le `client/`.
+Votre application est maintenant entièrement déployée ! Vous devriez pouvoir accéder à l'URL de votre client et utiliser l'application.

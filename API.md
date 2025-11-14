@@ -29,6 +29,11 @@ Base URL (développement)
 - Body : { token } (refresh token)
 - Réponse 200 : { accessToken }
 
+### POST /api/auth/logout
+- Description : Déconnecte l'utilisateur en invalidant son refresh token.
+- Header : `Authorization: Bearer <accessToken>`
+- Réponse 200 : { message: "Successfully logged out" }
+
 ### GET /api/auth/me
 - Description : Retourne l'utilisateur courant (nécessite Authorization header)
 - Header : `Authorization: Bearer <accessToken>`
