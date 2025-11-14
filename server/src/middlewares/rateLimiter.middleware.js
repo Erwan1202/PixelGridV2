@@ -11,22 +11,19 @@ const pixelRateLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
-  // Skip limiter during tests
   skip: () => process.env.NODE_ENV === 'test',
-  // Use user id when available, otherwise fallback to IP
   keyGenerator: (req, _res) => {
     if (req.user && req.user.id) {
       return `user:${req.user.id}`;
     }
-    // default IP-based limiting for unauthenticated requests
     return req.ip;
   },
 });
 
 // IP-based limiter for auth endpoints to mitigate brute force
 const authRateLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 10, // allow up to 10 attempts per IP per window
+  windowMs: 15 * 60 * 1000, 
+  max: 10, 
   message: { message: 'Trop de tentatives, réessayez plus tard.' },
   standardHeaders: true,
   legacyHeaders: false,
