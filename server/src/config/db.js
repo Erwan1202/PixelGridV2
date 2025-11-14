@@ -56,10 +56,7 @@ const connectDB = async () => {
     // 2. Connexion MongoDB (NON BLOQUANTE)
     if (process.env.MONGO_URI) {
       try {
-        await mongoose.connect(process.env.MONGO_URI, {
-          useNewUrlParser: true,
-          useUnifiedTopology: true,
-        });
+        await mongoose.connect(process.env.MONGO_URI);
         console.log('MongoDB Connected...');
       } catch (mongoErr) {
         const maskMongoUri = (uri) =>
@@ -70,7 +67,6 @@ const connectDB = async () => {
         console.error('Type d\'erreur :', mongoErr.name);
         console.error('Message :', mongoErr.message);
         if (mongoErr.stack) {
-          // Affiche seulement les premières lignes de la stack pour rester lisible
           console.error('Stack (premières lignes) :', mongoErr.stack.split('\n').slice(0, 6).join('\n'));
         }
         console.error('Vérifiez la valeur de MONGO_URI, les identifiants et la connectivité réseau.');
