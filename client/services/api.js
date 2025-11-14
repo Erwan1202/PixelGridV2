@@ -1,8 +1,11 @@
 import axios from 'axios';
 
+// Use Vite environment variable when available (fallback for local dev)
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+
 const api = axios.create({
-  baseURL: 'http://localhost:3001/api',
-  withCredentials: true, 
+  baseURL: `${API_BASE_URL}/api`,
+  withCredentials: true,
 });
 
 // Add a request interceptor to include the token in headers

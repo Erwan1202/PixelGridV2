@@ -1,6 +1,6 @@
 import { io } from 'socket.io-client';
 
-// Change this URL to your server's URL if different
-const URL = 'http://localhost:3001';
+// Use Vite environment variable when available (fallback for local dev)
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
 
-export const socket = io(URL);
+export const socket = io(API_BASE_URL);
