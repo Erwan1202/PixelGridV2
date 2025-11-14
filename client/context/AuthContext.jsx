@@ -1,49 +1,62 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import api from '../services/api.js';
 
-const AuthContext = createContext();
+const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // --- LOGIN ---
+  // Au montage, vérifie /auth/me si un token est présent
+  useEffect(() => {
+    const init = async () => {
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const res = await api.get('/auth/me');
+        setUser(res.data.user ?? res.data);
+      } catch (err) {
+        // Token invalide ou autre -> purge
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    init();
+  }, []);
+
   const login = async (email, password) => {
     const res = await api.post('/auth/login', { email, password });
 
-    localStorage.setItem('accessToken', res.data.accessToken);
-    setUser(res.data.user);
+    // Attendu: { accessToken, refreshToken, user }
+    const { accessToken, refreshToken, user: userData } = res.data;
+    if (accessToken) localStorage.setItem('accessToken', accessToken);
+    if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
+
+    setUser(userData ?? res.data.user ?? res.data);
+    return userData ?? res.data.user ?? res.data;
   };
 
-  // --- REGISTER ---
   const register = async (username, email, password) => {
-    const res = await api.post('/auth/register', {
-      username,
-      email,
-      password,
-    });
-
+    const res = await api.post('/auth/register', { username, email, password });
     return res.data;
   };
 
-  // --- FETCH CURRENT USER ---
-  const fetchCurrentUser = async () => {
-    try {
-      const res = await api.get('/auth/me');
-      // Accept both shapes: { user } (new) or plain user object (older implementations)
-      setUser(res.data.user ?? res.data);
-    } catch {
-      setUser(null);
-    }
+  const logout = () => {
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    setUser(null);
   };
 
-  useEffect(() => {
-    if (localStorage.getItem('accessToken')) {
-      fetchCurrentUser();
-    }
-  }, []);
-
   return (
-    <AuthContext.Provider value={{ user, login, register }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );
