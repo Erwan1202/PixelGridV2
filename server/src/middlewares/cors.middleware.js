@@ -1,10 +1,9 @@
 const cors = require('cors');
 
 // Configuration CORS options
-const corsOptions = {
-  origin: 'http://localhost:5173',
-  optionsSuccessStatus: 200,
-  credentials: true, 
-};
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  'http://localhost:5173'
+];
 
 module.exports = cors(corsOptions);
