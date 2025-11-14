@@ -17,7 +17,9 @@ api.interceptors.request.use(
     try {
       const hasToken = !!token;
       console.debug('[api] Interceptor - accessToken present:', hasToken);
-    } catch (e) {}
+    } catch(error){
+      console.debug('[api] Interceptor - error checking token presence:', error);
+    }
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
