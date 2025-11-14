@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const PROD_ORIGIN = import.meta.env.VITE_API_BASE_URL || '';
+const PROD_ORIGIN =
+  import.meta.env.VITE_API_BASE_URL || 'https://pixelgridv2.onrender.com';
 const API_BASE_URL =
   import.meta.env.MODE === 'development'
     ? 'http://localhost:3001/api'
@@ -28,8 +29,8 @@ api.interceptors.response.use(
   async (error) => {
 
     // Si 401, tente de rafraîchir le token
-    const originalRequest = error.config;
-    if (error.response.status === 401 && !originalRequest._retry) {
+    const originalRequest = error?.config || {};
+    if (error?.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       try {
         // Tente de rafraîchir le token

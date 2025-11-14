@@ -1,6 +1,6 @@
 import React from 'react';
 import './App.css';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/authStore.js';
 import { AuthForm } from './components/AuthForm';
 import Grid from './components/Grid'; // Importer Grid
 

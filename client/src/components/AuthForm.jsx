@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useAuth } from '../../context/AuthContext.jsx';
+import { useAuth } from '../../context/authStore.js';
 
 // Component for user authentication (login and registration)
 export const AuthForm = () => {
