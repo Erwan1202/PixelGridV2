@@ -2,6 +2,8 @@ const { Pool } = require('pg');
 const mongoose = require('mongoose');
 require('dotenv').config();
 
+const isProduction = process.env.NODE_ENV === 'production';
+
 // PostgreSQL Pool Setup
 const pool = new Pool({
   user: process.env.DB_USER,
@@ -9,20 +11,19 @@ const pool = new Pool({
   database: process.env.DB_DATABASE,
   password: process.env.DB_PASSWORD,
   port: process.env.DB_PORT,
+  ssl: isProduction
+    ? { rejectUnauthorized: false } 
+    : false,  
 });
 
 // Connect to both PostgreSQL and MongoDB
 const connectDB = async () => {
   try {
-  // Acquire and immediately release a client to verify connection without
-  // keeping a dedicated client checked out (prevents a leftover open handle).
+  
   const client = await pool.connect();
   client.release();
   console.log('PostgreSQL Connected...');
 
-    // Ensure required tables exist for tests and runtime. Creating here
-    // avoids needing the server startup to run model setup when tests call
-    // connectDB directly.
     const createUsersTable = `
     CREATE TABLE IF NOT EXISTS users (
       id SERIAL PRIMARY KEY,
