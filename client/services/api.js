@@ -36,7 +36,7 @@ api.interceptors.response.use(
         // Tente de rafraîchir le token
         const refreshToken = localStorage.getItem('refreshToken');
         if (!refreshToken) {
-          window.location.href = '/login';
+          window.location.href = '/';
           return Promise.reject(error);
         }
         // Appel pour rafraîchir le token
@@ -46,7 +46,7 @@ api.interceptors.response.use(
         api.defaults.headers.common['Authorization'] = 'Bearer ' + accessToken;
         return api(originalRequest);
       } catch (_error) {
-        window.location.href = '/login';
+        window.location.href = '/';
         return Promise.reject(_error);
       }
     }
