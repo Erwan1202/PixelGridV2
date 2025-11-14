@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const User = require('../models/user.model');
 
 // Middleware to check and verify JWT
 const checkJwt = async (req, res, next) => {
@@ -15,10 +16,15 @@ const checkJwt = async (req, res, next) => {
   try {
     const payload = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
 
-    req.user = { 
-      id: payload.id, 
-      role: payload.role 
-    };
+    // Fetch full user from DB and attach to req.user (omit password_hash)
+    const user = await User.findById(payload.id);
+    if (!user) {
+      return res.status(401).json({ message: 'User not found' });
+    }
+    // Remove sensitive fields
+    delete user.password_hash;
+
+    req.user = user;
 
     next();
   } catch (error) {

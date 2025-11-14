@@ -6,7 +6,7 @@ class GridService {
   static async getGridState() {
     try {
       const result = await pool.query(
-        'SELECT x_coord, y_coord, color FROM pixels'
+        'SELECT x_coord, y_coord, color FROM pixel'
       );
       return result.rows;
     } catch (error) {
@@ -23,7 +23,7 @@ class GridService {
 
     try {
       const pixelQuery = `
-        INSERT INTO pixels (x_coord, y_coord, color, user_id)
+        INSERT INTO pixel (x_coord, y_coord, color, user_id)
         VALUES ($1, $2, $3, $4)
         ON CONFLICT (x_coord, y_coord)
         DO UPDATE SET

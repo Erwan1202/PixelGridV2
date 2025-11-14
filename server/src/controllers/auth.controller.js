@@ -10,8 +10,9 @@ class AuthController {
       if (!username || !email || !password) {
         return res.status(400).json({ message: 'Username, email, and password are required' });
       }
-      const user = await AuthService.register(username, email, password);
-      res.status(201).json(user);
+  const user = await AuthService.register(username, email, password);
+  // return object with `user` key to match API tests
+  res.status(201).json({ user });
     } catch (error) {
       res.status(400).json({ message: error.message });
     }

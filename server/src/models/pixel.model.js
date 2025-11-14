@@ -4,7 +4,7 @@ const { pool } = require('../config/db');
 class Pixel {
   static async getState() {
   const result = await pool.query(
-    'SELECT x_coord, y_coord, color FROM pixels'
+    'SELECT x_coord, y_coord, color FROM pixel'
   );
   return result.rows;
 }
@@ -13,7 +13,7 @@ class Pixel {
   // Place or update a pixel
   static async place(x, y, color, userId) {
     const result = await pool.query(
-      `INSERT INTO pixels (x_coord, y_coord, color, user_id)
+      `INSERT INTO pixel (x_coord, y_coord, color, user_id)
        VALUES ($1, $2, $3, $4)
        ON CONFLICT (x_coord, y_coord) DO UPDATE
        SET color = $3, user_id = $4, updated_at = CURRENT_TIMESTAMP
@@ -26,7 +26,7 @@ class Pixel {
   // Initialize the pixels table
   static async setupTable() {
     const query = `
-    CREATE TABLE IF NOT EXISTS pixels (
+    CREATE TABLE IF NOT EXISTS pixel (
       id SERIAL PRIMARY KEY,
       x_coord INT NOT NULL,
       y_coord INT NOT NULL,
