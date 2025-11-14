@@ -36,7 +36,9 @@ export const AuthForm = () => {
           <div>
             <label>Username:</label>
             <input
+              name="username"
               type="text"
+              autoComplete="username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
@@ -46,7 +48,9 @@ export const AuthForm = () => {
         <div>
           <label>Email:</label>
           <input
+            name="email"
             type="email"
+            autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
@@ -55,7 +59,9 @@ export const AuthForm = () => {
         <div>
           <label>Password:</label>
           <input
+            name="password"
             type="password"
+            autoComplete={isLogin ? 'current-password' : 'new-password'}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required

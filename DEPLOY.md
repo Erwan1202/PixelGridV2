@@ -14,7 +14,7 @@ Option A — Déployer le client sur Vercel et le server sur un VPS / Heroku
 - Définir les variables d'environnement dans l'interface Vercel (VITE_API_BASE_URL et VITE_SOCKET_URL pointant vers l'API déployée).
 - Build command : `npm run build` ; Output directory : `dist`.
 
-2) Server (Heroku / VPS)
+2) Server (Render)
 - Heroku : push le dossier `server/` (ou créer un pipeline qui déploie `server/`).
 - Configurer les variables d'environnement (Postgres, MONGO_URI, JWT secrets, FRONTEND_URL, PORT).
 - Si Heroku, ajouter un addon PostgreSQL et renseigner la variable `DATABASE_URL` dans le code si besoin (ici on utilise variables DB_*). Pour Heroku il est souvent plus simple d'utiliser `DATABASE_URL` et d'adapter `server/src/config/db.js`.
