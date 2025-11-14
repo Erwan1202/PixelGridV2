@@ -14,19 +14,43 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('accessToken');
-    try {
-      const hasToken = !!token;
-      console.debug('[api] Interceptor - accessToken present:', hasToken);
-    } catch(error){
-      console.debug('[api] Interceptor - error checking token presence:', error);
-    }
-
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
   (error) => Promise.reject(error)
+);
+
+
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+
+    // Si 401, tente de rafraîchir le token
+    const originalRequest = error.config;
+    if (error.response.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+      try {
+        // Tente de rafraîchir le token
+        const refreshToken = localStorage.getItem('refreshToken');
+        if (!refreshToken) {
+          window.location.href = '/login';
+          return Promise.reject(error);
+        }
+        // Appel pour rafraîchir le token
+        const rs = await axios.post(`${API_BASE_URL}/auth/refresh-token`, { refreshToken });
+        const { accessToken } = rs.data;
+        localStorage.setItem('accessToken', accessToken);
+        api.defaults.headers.common['Authorization'] = 'Bearer ' + accessToken;
+        return api(originalRequest);
+      } catch (_error) {
+        window.location.href = '/login';
+        return Promise.reject(_error);
+      }
+    }
+    return Promise.reject(error);
+  }
 );
 
 export default api;
