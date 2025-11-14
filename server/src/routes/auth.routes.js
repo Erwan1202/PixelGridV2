@@ -10,9 +10,5 @@ router.post('/refresh', AuthController.refreshToken);
 // Return current authenticated user
 router.get('/me', checkJwt, AuthController.me);
 
-// Protected route example
-router.get('/me', checkJwt, (req, res) => {
-    res.status(200).json({ user: req.user });
-});
 
 module.exports = router;

@@ -53,7 +53,8 @@ class AuthController {
         return res.status(401).json({ message: 'Not authenticated' });
       }
       // req.user is sanitized in the middleware (password_hash removed)
-      res.status(200).json(req.user);
+      // Return a consistent shape: { user }
+      res.status(200).json({ user: req.user });
     } catch (error) {
       res.status(500).json({ message: error.message });
     }

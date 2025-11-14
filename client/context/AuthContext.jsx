@@ -29,7 +29,8 @@ export const AuthProvider = ({ children }) => {
   const fetchCurrentUser = async () => {
     try {
       const res = await api.get('/auth/me');
-      setUser(res.data.user);
+      // Accept both shapes: { user } (new) or plain user object (older implementations)
+      setUser(res.data.user ?? res.data);
     } catch {
       setUser(null);
     }
