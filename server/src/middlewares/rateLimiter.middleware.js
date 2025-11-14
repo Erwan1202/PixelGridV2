@@ -23,4 +23,15 @@ const pixelRateLimiter = rateLimit({
   },
 });
 
-module.exports = { pixelRateLimiter };
+// IP-based limiter for auth endpoints to mitigate brute force
+const authRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10, // allow up to 10 attempts per IP per window
+  message: { message: 'Trop de tentatives, réessayez plus tard.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: () => process.env.NODE_ENV === 'test',
+  keyGenerator: (req) => req.ip,
+});
+
+module.exports = { pixelRateLimiter, authRateLimiter };
