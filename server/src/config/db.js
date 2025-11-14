@@ -2,8 +2,8 @@ const { Pool } = require('pg');
 const mongoose = require('mongoose');
 require('dotenv').config();
 
-
-const useSSL = process.env.DB_SSL === 'true';
+// On active SSL dès qu'on n'est pas en localhost
+const useSSL = process.env.DB_HOST && process.env.DB_HOST !== 'localhost';
 
 // PostgreSQL Pool Setup
 const pool = new Pool({
@@ -13,8 +13,8 @@ const pool = new Pool({
   password: process.env.DB_PASSWORD,
   port: process.env.DB_PORT,
   ssl: useSSL
-    ? { rejectUnauthorized: false }
-    : false,                       
+    ? { rejectUnauthorized: false } // Render / hébergeurs managés
+    : false,                        // localhost → pas de SSL
 });
 
 // Connect to both PostgreSQL and MongoDB
