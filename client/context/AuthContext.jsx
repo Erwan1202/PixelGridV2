@@ -1,63 +1,51 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import api from '../services/api';
+import api from '../services/api.js';
 
-const AuthContext = createContext(null);
+const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
 
-  // On mount, check if user is authenticated
+  // --- LOGIN ---
+  const login = async (email, password) => {
+    const res = await api.post('/auth/login', { email, password });
+
+    localStorage.setItem('accessToken', res.data.accessToken);
+    setUser(res.data.user);
+  };
+
+  // --- REGISTER ---
+  const register = async (username, email, password) => {
+    const res = await api.post('/auth/register', {
+      username,
+      email,
+      password,
+    });
+
+    return res.data;
+  };
+
+  // --- FETCH CURRENT USER ---
+  const fetchCurrentUser = async () => {
+    try {
+      const res = await api.get('/auth/me');
+      setUser(res.data.user);
+    } catch {
+      setUser(null);
+    }
+  };
+
   useEffect(() => {
-    const checkUser = async () => {
-      const accessToken = localStorage.getItem('accessToken');
-      if (accessToken) {
-        try {
-          const response = await api.get('/auth/me');
-          setUser(response.data.user);
-        } catch (error) {
-          console.error('Failed to authenticate with token', error);
-          localStorage.removeItem('accessToken');
-          localStorage.removeItem('refreshToken');
-        }
-      }
-      setLoading(false);
-    };
-    checkUser();
+    if (localStorage.getItem('accessToken')) {
+      fetchCurrentUser();
+    }
   }, []);
 
-  // Login function
-  const login = async (email, password) => {
-    const response = await api.post('/auth/login', { email, password });
-    localStorage.setItem('accessToken', response.data.accessToken);
-    localStorage.setItem('refreshToken', response.data.refreshToken);
-    setUser(response.data.user);
-  };
-
-  // Register function
-  const register = async (username, email, password) => {
-    await api.post('/auth/register', { username, email, password });
-  };
-  
-  // Logout function
-  const logout = () => {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-    setUser(null);
-  };
-
-  // Context value
-  const value = {
-    user,
-    loading,
-    login,
-    register,
-    logout,
-  };
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={{ user, login, register }}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
-export const useAuth = () => {
-  return useContext(AuthContext);
-};
+export const useAuth = () => useContext(AuthContext);
