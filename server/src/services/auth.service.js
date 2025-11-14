@@ -2,12 +2,19 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user.model');
 
-const JWT_ACCESS_SECRET = process.env.JWT_ACCESS_SECRET;
-const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET;
+// Read JWT secrets lazily so the module can be imported during build
+// (some hosting platforms set env vars only at runtime). The function
+// will throw only when a token operation actually needs the secrets.
+function getJwtSecrets() {
+  const access = process.env.JWT_ACCESS_SECRET || process.env.JWT_SECRET;
+  const refresh = process.env.JWT_REFRESH_SECRET || process.env.JWT_REFRESH_SECRET_LEGACY;
 
-if (!JWT_ACCESS_SECRET || !JWT_REFRESH_SECRET) {
-  console.error('JWT secrets not configured. Please set JWT_ACCESS_SECRET and JWT_REFRESH_SECRET environment variables.');
-  throw new Error('JWT secrets not configured');
+  if (!access || !refresh) {
+    console.error('JWT secrets not configured. Please set JWT_ACCESS_SECRET and JWT_REFRESH_SECRET environment variables.');
+    throw new Error('JWT secrets not configured');
+  }
+
+  return { access, refresh };
 }
 
 // Authentication service
@@ -15,20 +22,14 @@ class AuthService {
 
   // Generate access token
   generateAccessToken(user) {
-    return jwt.sign(
-      { id: user.id, role: user.role },
-      JWT_ACCESS_SECRET,
-      { expiresIn: '15m' }
-    );
+    const { access } = getJwtSecrets();
+    return jwt.sign({ id: user.id, role: user.role }, access, { expiresIn: '15m' });
   }
 
   // Generate refresh token
   generateRefreshToken(user) {
-    return jwt.sign(
-      { id: user.id },
-      JWT_REFRESH_SECRET,
-      { expiresIn: '7d' }
-    );
+    const { refresh } = getJwtSecrets();
+    return jwt.sign({ id: user.id }, refresh, { expiresIn: '7d' });
   }
 
   // User registration
@@ -68,7 +69,8 @@ class AuthService {
   // Refresh access token using refresh token
   async refreshToken(token) {
     try {
-      const payload = jwt.verify(token, JWT_REFRESH_SECRET);
+      const { refresh } = getJwtSecrets();
+      const payload = jwt.verify(token, refresh);
       const user = await User.findById(payload.id);
 
       if (!user) {
