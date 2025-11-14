@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import './App.css';
 import { useAuth } from '../context/AuthContext';
 import { AuthForm } from './components/AuthForm';

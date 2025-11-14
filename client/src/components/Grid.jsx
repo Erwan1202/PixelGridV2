@@ -85,7 +85,6 @@ const Grid = () => {
   }, []);
 
   // Handle placing a pixel
-  // Mise à jour du timestamp courant pour cooldown affichage
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(id);
@@ -192,6 +191,10 @@ const Grid = () => {
   return (
     <div className="App">
       <div className="toolbar" aria-label="contrôles de placement">
+        <button
+          onClick={() => { socket.disconnect(); }}
+          aria-label="logout"
+        > </button>
         <div className="color-picker">
           <label style={{ fontSize: '.75rem', textTransform: 'uppercase', letterSpacing: '.5px' }}>Couleur</label>
           <input

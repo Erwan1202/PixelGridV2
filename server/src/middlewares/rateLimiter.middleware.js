@@ -12,12 +12,6 @@ const pixelRateLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   skip: () => process.env.NODE_ENV === 'test',
-  keyGenerator: (req, _res) => {
-    if (req.user && req.user.id) {
-      return `user:${req.user.id}`;
-    }
-    return req.ip;
-  },
 });
 
 // IP-based limiter for auth endpoints to mitigate brute force
@@ -28,7 +22,6 @@ const authRateLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   skip: () => process.env.NODE_ENV === 'test',
-  keyGenerator: (req) => req.ip,
 });
 
 module.exports = { pixelRateLimiter, authRateLimiter };
